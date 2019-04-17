@@ -24,6 +24,8 @@ window.VLSpc = {
 
 window.VSpec = vl.compile(window.VLSpc);
 
+console.log(JSON.stringify(window.VSpec))
+
 // Returns graph in form of https://github.com/vega/vega/tree/master/packages/vega-runtime
 
 window.graph = vega.parse(window.VSpec)
