@@ -1,0 +1,78 @@
+{
+  "background": null,
+  "operators": [
+    { "id": 0, "type": "operator", "root": true },
+    { "id": 1, "type": "operator", "value": 0, "signal": "width" },
+    { "id": 2, "type": "operator", "value": 0, "signal": "height" },
+    {
+      "id": 3,
+      "type": "operator",
+      "value": { "top": 0, "bottom": 0, "left": 0, "right": 0 },
+      "signal": "padding"
+    },
+    {
+      "id": 4,
+      "type": "operator",
+      "value": { "type": "pad" },
+      "signal": "autosize"
+    },
+    {
+      "id": 5,
+      "type": "operator",
+      "value": null,
+      "params": {},
+      "update": "{\"offset\":18,\"direction\":\"horizontal\",\"left\":{\"direction\":\"vertical\"},\"right\":{\"direction\":\"vertical\"}}"
+    },
+    { "id": 6, "type": "collect", "data": { "root": ["input", "output"] } },
+    {
+      "id": 7,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 6 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"x\"]=0;o[\"y\"]=0;return 1;",
+              "$fields": [],
+              "$output": ["x", "y"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"width\"]=_[\"$width\"];o[\"height\"]=_[\"$height\"];return 1;",
+              "$fields": [],
+              "$output": ["width", "height"]
+            }
+          }
+        },
+        "$width": { "$ref": 1 },
+        "$height": { "$ref": 2 }
+      }
+    },
+    { "id": 9, "type": "sieve", "params": { "pulse": { "$ref": 7 } } },
+    {
+      "id": 8,
+      "type": "viewlayout",
+      "params": {
+        "legends": { "$ref": 5 },
+        "autosize": { "$ref": 4 },
+        "mark": { "$ref": 0 },
+        "pulse": { "$ref": 7 }
+      }
+    },
+    {
+      "id": 10,
+      "type": "bound",
+      "params": { "mark": { "$ref": 0 }, "pulse": { "$ref": 8 } }
+    },
+    { "id": 11, "type": "render", "params": { "pulse": { "$ref": 10 } } },
+    {
+      "id": 12,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 11 } },
+      "data": { "root": ["values"] }
+    }
+  ],
+  "streams": [],
+  "updates": [],
+  "bindings": [],
+  "eventConfig": { "defaults": { "allow": ["wheel"] } }
+}
