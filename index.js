@@ -22,7 +22,7 @@ window.VLSpc = {
   transform: [{ filter: { selection: "month" } }]
 };
 
-window.VSpec = vl.compile(window.VLSpc);
+window.VSpec = vl.compile(window.VLSpc).spec;
 
 console.log(JSON.stringify(window.VSpec))
 

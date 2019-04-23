@@ -1,156 +1,151 @@
 {
-  "spec": {
-    "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "autosize": "pad",
-    "padding": 5,
-    "height": 300,
-    "style": "cell",
-    "data": [
-      { "name": "month_store" },
-      { "name": "initial-data" },
-      {
-        "name": "data_0",
-        "source": "initial-data",
-        "transform": [
-          {
-            "type": "filter",
-            "expr": "!(length(data(\"month_store\"))) || (vlSelectionTest(\"month_store\", datum))"
-          },
-          {
-            "type": "aggregate",
-            "groupby": ["flight_dayofmonth"],
-            "ops": ["average"],
-            "fields": ["depdelay"],
-            "as": ["average_depdelay"]
-          }
-        ]
-      }
-    ],
-    "signals": [
-      { "name": "x_step", "value": 20 },
-      {
-        "name": "width",
-        "update": "bandspace(domain('x').length, 1, 0.5) * x_step"
-      },
-      {
-        "name": "unit",
-        "value": {},
-        "on": [
-          {
-            "events": "mousemove",
-            "update": "isTuple(group()) ? group() : unit"
-          }
-        ]
-      },
-      {
-        "name": "month_flight_month",
-        "value": null,
-        "on": [
-          {
-            "events": [{ "source": "scope", "type": "click" }],
-            "update": "datum && item().mark.marktype !== 'group' ? datum[\"flight_month\"] : null"
-          },
-          {
-            "events": [{ "source": "scope", "type": "dblclick" }],
-            "update": "null"
-          }
-        ],
-        "bind": { "input": "range", "max": 12, "min": 1, "step": 1 }
-      },
-      { "name": "month", "update": "vlSelectionResolve(\"month_store\")" },
-      {
-        "name": "month_tuple",
-        "update": "month_flight_month !== null ? {fields: month_tuple_fields, values: [month_flight_month]} : null"
-      },
-      {
-        "name": "month_tuple_fields",
-        "value": [{ "type": "E", "field": "flight_month" }]
-      },
-      {
-        "name": "month_modify",
-        "update": "modify(\"month_store\", month_tuple, true)"
-      }
-    ],
-    "marks": [
-      {
-        "name": "marks",
-        "type": "line",
-        "style": ["line"],
-        "sort": {
-          "field": "datum[\"flight_dayofmonth\"]",
-          "order": "descending"
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "autosize": "pad",
+  "padding": 5,
+  "height": 300,
+  "style": "cell",
+  "data": [
+    { "name": "month_store" },
+    { "name": "initial-data" },
+    {
+      "name": "data_0",
+      "source": "initial-data",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "!(length(data(\"month_store\"))) || (vlSelectionTest(\"month_store\", datum))"
         },
-        "from": { "data": "data_0" },
-        "encode": {
-          "update": {
-            "stroke": { "value": "#4c78a8" },
-            "tooltip": {
-              "signal": "{\"flight_dayofmonth\": ''+datum[\"flight_dayofmonth\"], \"Average of depdelay\": format(datum[\"average_depdelay\"], \"\")}"
-            },
-            "x": { "scale": "x", "field": "flight_dayofmonth" },
-            "y": { "scale": "y", "field": "average_depdelay" },
-            "defined": {
-              "signal": "datum[\"average_depdelay\"] !== null && !isNaN(datum[\"average_depdelay\"])"
-            }
+        {
+          "type": "aggregate",
+          "groupby": ["flight_dayofmonth"],
+          "ops": ["average"],
+          "fields": ["depdelay"],
+          "as": ["average_depdelay"]
+        }
+      ]
+    }
+  ],
+  "signals": [
+    { "name": "x_step", "value": 20 },
+    {
+      "name": "width",
+      "update": "bandspace(domain('x').length, 1, 0.5) * x_step"
+    },
+    {
+      "name": "unit",
+      "value": {},
+      "on": [
+        { "events": "mousemove", "update": "isTuple(group()) ? group() : unit" }
+      ]
+    },
+    {
+      "name": "month_flight_month",
+      "value": null,
+      "on": [
+        {
+          "events": [{ "source": "scope", "type": "click" }],
+          "update": "datum && item().mark.marktype !== 'group' ? datum[\"flight_month\"] : null"
+        },
+        {
+          "events": [{ "source": "scope", "type": "dblclick" }],
+          "update": "null"
+        }
+      ],
+      "bind": { "input": "range", "max": 12, "min": 1, "step": 1 }
+    },
+    { "name": "month", "update": "vlSelectionResolve(\"month_store\")" },
+    {
+      "name": "month_tuple",
+      "update": "month_flight_month !== null ? {fields: month_tuple_fields, values: [month_flight_month]} : null"
+    },
+    {
+      "name": "month_tuple_fields",
+      "value": [{ "type": "E", "field": "flight_month" }]
+    },
+    {
+      "name": "month_modify",
+      "update": "modify(\"month_store\", month_tuple, true)"
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks",
+      "type": "line",
+      "style": ["line"],
+      "sort": {
+        "field": "datum[\"flight_dayofmonth\"]",
+        "order": "descending"
+      },
+      "from": { "data": "data_0" },
+      "encode": {
+        "update": {
+          "stroke": { "value": "#4c78a8" },
+          "tooltip": {
+            "signal": "{\"flight_dayofmonth\": ''+datum[\"flight_dayofmonth\"], \"Average of depdelay\": format(datum[\"average_depdelay\"], \"\")}"
+          },
+          "x": { "scale": "x", "field": "flight_dayofmonth" },
+          "y": { "scale": "y", "field": "average_depdelay" },
+          "defined": {
+            "signal": "datum[\"average_depdelay\"] !== null && !isNaN(datum[\"average_depdelay\"])"
           }
         }
       }
-    ],
-    "scales": [
-      {
-        "name": "x",
-        "type": "point",
-        "domain": {
-          "data": "data_0",
-          "field": "flight_dayofmonth",
-          "sort": true
-        },
-        "range": { "step": { "signal": "x_step" } },
-        "padding": 0.5
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "point",
+      "domain": {
+        "data": "data_0",
+        "field": "flight_dayofmonth",
+        "sort": true
       },
-      {
-        "name": "y",
-        "type": "linear",
-        "domain": { "data": "data_0", "field": "average_depdelay" },
-        "range": [{ "signal": "height" }, 0],
-        "nice": true,
-        "zero": true
-      }
-    ],
-    "axes": [
-      {
-        "scale": "x",
-        "orient": "bottom",
-        "grid": false,
-        "title": "flight_dayofmonth",
-        "labelAlign": "right",
-        "labelAngle": 270,
-        "labelBaseline": "middle",
-        "labelOverlap": true,
-        "zindex": 1
-      },
-      {
-        "scale": "y",
-        "orient": "left",
-        "grid": false,
-        "title": "Average of depdelay",
-        "labelOverlap": true,
-        "tickCount": { "signal": "ceil(height/40)" },
-        "zindex": 1
-      },
-      {
-        "scale": "y",
-        "orient": "left",
-        "gridScale": "x",
-        "grid": true,
-        "tickCount": { "signal": "ceil(height/40)" },
-        "domain": false,
-        "labels": false,
-        "maxExtent": 0,
-        "minExtent": 0,
-        "ticks": false,
-        "zindex": 0
-      }
-    ]
-  }
+      "range": { "step": { "signal": "x_step" } },
+      "padding": 0.5
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "domain": { "data": "data_0", "field": "average_depdelay" },
+      "range": [{ "signal": "height" }, 0],
+      "nice": true,
+      "zero": true
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "grid": false,
+      "title": "flight_dayofmonth",
+      "labelAlign": "right",
+      "labelAngle": 270,
+      "labelBaseline": "middle",
+      "labelOverlap": true,
+      "zindex": 1
+    },
+    {
+      "scale": "y",
+      "orient": "left",
+      "grid": false,
+      "title": "Average of depdelay",
+      "labelOverlap": true,
+      "tickCount": { "signal": "ceil(height/40)" },
+      "zindex": 1
+    },
+    {
+      "scale": "y",
+      "orient": "left",
+      "gridScale": "x",
+      "grid": true,
+      "tickCount": { "signal": "ceil(height/40)" },
+      "domain": false,
+      "labels": false,
+      "maxExtent": 0,
+      "minExtent": 0,
+      "ticks": false,
+      "zindex": 0
+    }
+  ]
 }

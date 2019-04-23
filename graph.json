@@ -2,12 +2,19 @@
   "background": null,
   "operators": [
     { "id": 0, "type": "operator", "root": true },
-    { "id": 1, "type": "operator", "value": 0, "signal": "width" },
-    { "id": 2, "type": "operator", "value": 0, "signal": "height" },
+    {
+      "id": 1,
+      "type": "operator",
+      "value": 0,
+      "params": { "%x": { "$ref": 17 }, "$x_step": { "$ref": 6 } },
+      "update": "(this.bandspace(this.domain('x').length,1,0.5)*_[\"$x_step\"])",
+      "signal": "width"
+    },
+    { "id": 2, "type": "operator", "value": 300, "signal": "height" },
     {
       "id": 3,
       "type": "operator",
-      "value": { "top": 0, "bottom": 0, "left": 0, "right": 0 },
+      "value": { "top": 5, "bottom": 5, "left": 5, "right": 5 },
       "signal": "padding"
     },
     {
@@ -23,18 +30,56 @@
       "params": {},
       "update": "{\"offset\":18,\"direction\":\"horizontal\",\"left\":{\"direction\":\"vertical\"},\"right\":{\"direction\":\"vertical\"}}"
     },
-    { "id": 6, "type": "collect", "data": { "root": ["input", "output"] } },
+    { "id": 6, "type": "operator", "value": 20, "signal": "x_step" },
+    { "id": 7, "type": "operator", "value": {}, "signal": "unit" },
     {
-      "id": 7,
+      "id": 8,
+      "type": "operator",
+      "value": null,
+      "signal": "month_flight_month"
+    },
+    {
+      "id": 9,
+      "type": "operator",
+      "params": { ":month_store": { "$ref": 20 } },
+      "update": "this.vlSelectionResolve(\"month_store\")",
+      "signal": "month"
+    },
+    {
+      "id": 10,
+      "type": "operator",
+      "params": {
+        "$month_flight_month": { "$ref": 8 },
+        "$month_tuple_fields": { "$ref": 11 }
+      },
+      "update": "((_[\"$month_flight_month\"]!==null)?{fields:_[\"$month_tuple_fields\"],values:[_[\"$month_flight_month\"]]}:null)",
+      "signal": "month_tuple"
+    },
+    {
+      "id": 11,
+      "type": "operator",
+      "value": [{ "type": "E", "field": "flight_month" }],
+      "signal": "month_tuple_fields"
+    },
+    {
+      "id": 12,
+      "type": "operator",
+      "params": { "$month_tuple": { "$ref": 10 } },
+      "update": "this.modify(\"month_store\",_[\"$month_tuple\"],true)",
+      "signal": "month_modify"
+    },
+    { "id": 13, "type": "collect", "data": { "root": ["input", "output"] } },
+    {
+      "id": 14,
       "type": "encode",
       "params": {
-        "pulse": { "$ref": 6 },
+        "pulse": { "$ref": 13 },
         "encoders": {
           "$encode": {
             "enter": {
-              "$expr": "var o=item,datum=o.datum,$;o[\"x\"]=0;o[\"y\"]=0;return 1;",
+              "$expr": "var o=item,datum=o.datum,$;o[\"fill\"]=\"transparent\";o[\"stroke\"]=\"#ddd\";o[\"x\"]=0;o[\"y\"]=0;return 1;",
               "$fields": [],
-              "$output": ["x", "y"]
+              "$output": ["fill", "stroke", "x", "y"]
             },
             "update": {
               "$expr": "var o=item,datum=o.datum,$;o[\"width\"]=_[\"$width\"];o[\"height\"]=_[\"$height\"];return 1;",
@@ -47,32 +92,1163 @@
         "$height": { "$ref": 2 }
       }
     },
-    { "id": 9, "type": "sieve", "params": { "pulse": { "$ref": 7 } } },
+    { "id": 16, "type": "sieve", "params": { "pulse": { "$ref": 14 } } },
     {
-      "id": 8,
+      "id": 17,
+      "type": "scale",
+      "params": {
+        "type": "point",
+        "domain": { "$ref": 31 },
+        "rangeStep": { "$ref": 6 },
+        "padding": 0.5
+      },
+      "scale": "x"
+    },
+    {
+      "id": 18,
+      "type": "scale",
+      "params": {
+        "type": "linear",
+        "domain": { "$ref": 32 },
+        "range": [{ "$ref": 2 }, 0],
+        "nice": true,
+        "zero": true
+      },
+      "scale": "y"
+    },
+    {
+      "id": 19,
+      "type": "collect",
+      "params": {},
+      "metadata": { "source": true },
+      "data": { "month_store": ["input", "output"] }
+    },
+    {
+      "id": 20,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 19 } },
+      "data": { "month_store": ["values"] }
+    },
+    {
+      "id": 21,
+      "type": "collect",
+      "params": {},
+      "metadata": { "source": true },
+      "data": { "initial-data": ["input", "output"] }
+    },
+    {
+      "id": 22,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 21 } },
+      "data": { "initial-data": ["values"] }
+    },
+    {
+      "id": 23,
+      "type": "relay",
+      "params": { "derive": false, "pulse": { "$ref": 21 } },
+      "data": { "data_0": ["input"] }
+    },
+    {
+      "id": 24,
+      "type": "filter",
+      "value": null,
+      "params": {
+        "expr": {
+          "$expr": "((!this.data(\"month_store\").length)||this.vlSelectionTest(\"month_store\",datum))",
+          "$fields": [],
+          "$params": { ":month_store": { "$ref": 20 } }
+        },
+        "pulse": { "$ref": 23 }
+      },
+      "metadata": { "changes": true }
+    },
+    {
+      "id": 25,
+      "type": "collect",
+      "params": { "pulse": { "$ref": 24 } },
+      "metadata": { "source": true }
+    },
+    {
+      "id": 26,
+      "type": "aggregate",
+      "value": null,
+      "params": {
+        "groupby": [{ "$field": "flight_dayofmonth" }],
+        "ops": ["average"],
+        "fields": [{ "$field": "depdelay" }],
+        "as": ["average_depdelay"],
+        "pulse": { "$ref": 25 }
+      },
+      "metadata": { "generates": true, "changes": true }
+    },
+    {
+      "id": 27,
+      "type": "collect",
+      "params": { "pulse": { "$ref": 26 } },
+      "metadata": { "source": true },
+      "data": { "data_0": ["output"] }
+    },
+    {
+      "id": 28,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 27 } },
+      "data": { "data_0": ["values"] }
+    },
+    {
+      "id": 29,
+      "type": "aggregate",
+      "params": {
+        "groupby": { "$field": "flight_dayofmonth", "$name": "key" },
+        "pulse": { "$ref": 27 },
+        "ops": ["count"],
+        "fields": [null],
+        "as": ["count"]
+      }
+    },
+    { "id": 30, "type": "collect", "params": { "pulse": { "$ref": 29 } } },
+    {
+      "id": 31,
+      "type": "values",
+      "params": {
+        "field": { "$field": "key" },
+        "pulse": { "$ref": 30 },
+        "sort": {
+          "$compare": ["key", { "$tupleid": 1 }],
+          "$order": ["ascending", "ascending"]
+        }
+      }
+    },
+    {
+      "id": 32,
+      "type": "extent",
+      "params": {
+        "field": { "$field": "average_depdelay" },
+        "pulse": { "$ref": 27 }
+      }
+    },
+    {
+      "id": 38,
+      "type": "collect",
+      "value": [
+        {
+          "orient": "bottom",
+          "ticks": true,
+          "labels": true,
+          "grid": false,
+          "domain": true,
+          "title": true
+        }
+      ],
+      "params": {}
+    },
+    { "id": 39, "type": "axisticks", "params": { "scale": { "$ref": 17 } } },
+    {
+      "id": 40,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 38 }, "clean": false }
+    },
+    { "id": 41, "type": "collect", "params": { "pulse": { "$ref": 40 } } },
+    {
+      "id": 42,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "group", "role": "axis", "zindex": 1 },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": null,
+        "parent": null,
+        "index": 0,
+        "pulse": { "$ref": 41 }
+      }
+    },
+    {
+      "id": 43,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 42 },
+        "encoders": {
+          "$encode": {
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"offset\"]=0;o[\"position\"]=0;o[\"titlePadding\"]=4;o[\"minExtent\"]=0;o[\"maxExtent\"]=200;o[\"range\"]=Math.abs(this.span(this.range(\"x\")));return 1;",
+              "$fields": [],
+              "$output": [
+                "offset",
+                "position",
+                "titlePadding",
+                "minExtent",
+                "maxExtent",
+                "range"
+              ]
+            },
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;return 1;",
+              "$fields": [],
+              "$output": []
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 16 }
+      }
+    },
+    {
+      "id": 44,
+      "type": "bound",
+      "params": { "mark": { "$ref": 42 }, "pulse": { "$ref": 43 } }
+    },
+    { "id": 45, "type": "sieve", "params": { "pulse": { "$ref": 43 } } },
+    { "id": 46, "type": "proxy", "params": { "value": { "$ref": 40 } } },
+    {
+      "id": 47,
+      "type": "datajoin",
+      "params": {
+        "key": { "$field": "value" },
+        "pulse": { "$ref": 39 },
+        "clean": true
+      }
+    },
+    { "id": 48, "type": "collect", "params": { "pulse": { "$ref": 47 } } },
+    {
+      "id": 49,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "rule", "role": "axis-tick" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 46 },
+        "parent": null,
+        "index": 0,
+        "pulse": { "$ref": 48 }
+      }
+    },
+    {
+      "id": 50,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 49 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"stroke\"]=\"#888\";o[\"strokeWidth\"]=1;o[\"y\"]=0;o[\"y2\"]=5*1;o[\"x\"]=Math.round(_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "stroke", "strokeWidth", "y", "y2", "x"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"y\"]=0;o[\"y2\"]=5*1;o[\"x\"]=Math.round(_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "y", "y2", "x"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"x\"]=Math.round(_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "x"]
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 45 }
+      }
+    },
+    {
+      "id": 51,
+      "type": "bound",
+      "params": { "mark": { "$ref": 49 }, "pulse": { "$ref": 50 } }
+    },
+    { "id": 52, "type": "render", "params": { "pulse": { "$ref": 51 } } },
+    {
+      "id": 53,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 52 } },
+      "parent": { "$ref": 44 }
+    },
+    {
+      "id": 54,
+      "type": "datajoin",
+      "params": {
+        "key": { "$field": "value" },
+        "pulse": { "$ref": 39 },
+        "clean": true
+      }
+    },
+    { "id": 55, "type": "collect", "params": { "pulse": { "$ref": 54 } } },
+    {
+      "id": 56,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "text", "role": "axis-label" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 46 },
+        "parent": null,
+        "index": 1,
+        "pulse": { "$ref": 55 }
+      }
+    },
+    {
+      "id": 57,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 56 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"fill\"]=\"#000\";o[\"font\"]=\"sans-serif\";o[\"fontSize\"]=10;o[\"opacity\"]=0;o[\"x\"]=_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0;o[\"y\"]=5*1+(2*1);o[\"align\"]=\"right\";o[\"baseline\"]=\"middle\";o[\"angle\"]=270;o[\"limit\"]=180;return 1;",
+              "$fields": ["value"],
+              "$output": [
+                "fill",
+                "font",
+                "fontSize",
+                "opacity",
+                "x",
+                "y",
+                "align",
+                "baseline",
+                "angle",
+                "limit"
+              ]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"text\"]=datum[\"label\"];o[\"x\"]=_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0;o[\"y\"]=5*1+(2*1);return 1;",
+              "$fields": ["label", "value"],
+              "$output": ["opacity", "text", "x", "y"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"x\"]=_[\"%x\"](datum[\"value\"])+_[\"%x\"].bandwidth()*0.5+0;o[\"y\"]=5*1+(2*1);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "x", "y"]
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 45 }
+      }
+    },
+    {
+      "id": 58,
+      "type": "bound",
+      "params": { "mark": { "$ref": 56 }, "pulse": { "$ref": 57 } }
+    },
+    {
+      "id": 59,
+      "type": "overlap",
+      "params": {
+        "method": true,
+        "pulse": { "$ref": 58 },
+        "sort": { "$compare": ["datum.index"], "$order": [] }
+      }
+    },
+    { "id": 60, "type": "render", "params": { "pulse": { "$ref": 59 } } },
+    {
+      "id": 61,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 60 } },
+      "parent": { "$ref": 44 }
+    },
+    {
+      "id": 62,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 38 }, "clean": true }
+    },
+    { "id": 63, "type": "collect", "params": { "pulse": { "$ref": 62 } } },
+    {
+      "id": 64,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "rule", "role": "axis-domain" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 46 },
+        "parent": null,
+        "index": 2,
+        "pulse": { "$ref": 63 }
+      }
+    },
+    {
+      "id": 65,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 64 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"stroke\"]=\"#888\";o[\"strokeWidth\"]=1;o[\"y\"]=0;o[\"x\"]=_[\"%x\"].range()[0];o[\"x2\"]=($=_[\"%x\"].range(),$[$.length-1]);return 1;",
+              "$fields": [],
+              "$output": ["opacity", "stroke", "strokeWidth", "y", "x", "x2"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"x\"]=_[\"%x\"].range()[0];o[\"x2\"]=($=_[\"%x\"].range(),$[$.length-1]);return 1;",
+              "$fields": [],
+              "$output": ["opacity", "x", "x2"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;return 1;",
+              "$fields": [],
+              "$output": ["opacity"]
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 45 }
+      }
+    },
+    {
+      "id": 66,
+      "type": "bound",
+      "params": { "mark": { "$ref": 64 }, "pulse": { "$ref": 65 } }
+    },
+    { "id": 67, "type": "render", "params": { "pulse": { "$ref": 66 } } },
+    {
+      "id": 68,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 67 } },
+      "parent": { "$ref": 44 }
+    },
+    {
+      "id": 69,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 38 }, "clean": true }
+    },
+    { "id": 70, "type": "collect", "params": { "pulse": { "$ref": 69 } } },
+    {
+      "id": 71,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "text", "role": "axis-title" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 46 },
+        "parent": null,
+        "index": 3,
+        "pulse": { "$ref": 70 }
+      }
+    },
+    {
+      "id": 72,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 71 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"fill\"]=\"#000\";o[\"font\"]=\"sans-serif\";o[\"fontSize\"]=11;o[\"fontWeight\"]=\"bold\";o[\"opacity\"]=0;o[\"anchor\"]=null;o[\"align\"]=((item.anchor===\"start\")?\"left\":((item.anchor===\"end\")?\"right\":\"center\"));o[\"angle\"]=0;o[\"baseline\"]=\"top\";o[\"auto\"]=true;return 1;",
+              "$fields": [],
+              "$output": [
+                "fill",
+                "font",
+                "fontSize",
+                "fontWeight",
+                "opacity",
+                "anchor",
+                "align",
+                "angle",
+                "baseline",
+                "auto"
+              ]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"anchor\"]=null;o[\"align\"]=((item.anchor===\"start\")?\"left\":((item.anchor===\"end\")?\"right\":\"center\"));o[\"text\"]=\"flight_dayofmonth\";o[\"x\"]=this.lerp(this.range(\"x\"),((item.anchor===\"start\")?0:((item.anchor===\"end\")?1:0.5)));return 1;",
+              "$fields": [],
+              "$output": ["opacity", "anchor", "align", "text", "x"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;return 1;",
+              "$fields": [],
+              "$output": ["opacity"]
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 45 }
+      }
+    },
+    {
+      "id": 73,
+      "type": "bound",
+      "params": { "mark": { "$ref": 71 }, "pulse": { "$ref": 72 } }
+    },
+    { "id": 74, "type": "render", "params": { "pulse": { "$ref": 73 } } },
+    {
+      "id": 75,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 74 } },
+      "parent": { "$ref": 44 }
+    },
+    { "id": 76, "type": "render", "params": { "pulse": { "$ref": 44 } } },
+    {
+      "id": 77,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 76 } },
+      "parent": { "$ref": 15 }
+    },
+    {
+      "id": 78,
+      "type": "collect",
+      "value": [
+        {
+          "orient": "left",
+          "ticks": true,
+          "labels": true,
+          "grid": false,
+          "domain": true,
+          "title": true
+        }
+      ],
+      "params": {}
+    },
+    {
+      "id": 79,
+      "type": "operator",
+      "value": null,
+      "params": { "$height": { "$ref": 2 } },
+      "update": "Math.ceil((_[\"$height\"]/40))"
+    },
+    {
+      "id": 80,
+      "type": "axisticks",
+      "params": { "scale": { "$ref": 18 }, "count": { "$ref": 79 } }
+    },
+    {
+      "id": 81,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 78 }, "clean": false }
+    },
+    { "id": 82, "type": "collect", "params": { "pulse": { "$ref": 81 } } },
+    {
+      "id": 83,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "group", "role": "axis", "zindex": 1 },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": null,
+        "parent": null,
+        "index": 1,
+        "pulse": { "$ref": 82 }
+      }
+    },
+    {
+      "id": 84,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 83 },
+        "encoders": {
+          "$encode": {
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"offset\"]=0;o[\"position\"]=0;o[\"titlePadding\"]=4;o[\"minExtent\"]=0;o[\"maxExtent\"]=200;o[\"range\"]=Math.abs(this.span(this.range(\"y\")));return 1;",
+              "$fields": [],
+              "$output": [
+                "offset",
+                "position",
+                "titlePadding",
+                "minExtent",
+                "maxExtent",
+                "range"
+              ]
+            },
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;return 1;",
+              "$fields": [],
+              "$output": []
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 16 }
+      }
+    },
+    {
+      "id": 85,
+      "type": "bound",
+      "params": { "mark": { "$ref": 83 }, "pulse": { "$ref": 84 } }
+    },
+    { "id": 86, "type": "sieve", "params": { "pulse": { "$ref": 84 } } },
+    { "id": 87, "type": "proxy", "params": { "value": { "$ref": 81 } } },
+    {
+      "id": 88,
+      "type": "datajoin",
+      "params": {
+        "key": { "$field": "value" },
+        "pulse": { "$ref": 80 },
+        "clean": true
+      }
+    },
+    { "id": 89, "type": "collect", "params": { "pulse": { "$ref": 88 } } },
+    {
+      "id": 90,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "rule", "role": "axis-tick" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 87 },
+        "parent": null,
+        "index": 0,
+        "pulse": { "$ref": 89 }
+      }
+    },
+    {
+      "id": 91,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 90 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"stroke\"]=\"#888\";o[\"strokeWidth\"]=1;o[\"x\"]=0;o[\"x2\"]=5*-1;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "stroke", "strokeWidth", "x", "x2", "y"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"x\"]=0;o[\"x2\"]=5*-1;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "x", "x2", "y"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "y"]
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 86 }
+      }
+    },
+    {
+      "id": 92,
+      "type": "bound",
+      "params": { "mark": { "$ref": 90 }, "pulse": { "$ref": 91 } }
+    },
+    { "id": 93, "type": "render", "params": { "pulse": { "$ref": 92 } } },
+    {
+      "id": 94,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 93 } },
+      "parent": { "$ref": 85 }
+    },
+    {
+      "id": 95,
+      "type": "datajoin",
+      "params": {
+        "key": { "$field": "value" },
+        "pulse": { "$ref": 80 },
+        "clean": true
+      }
+    },
+    { "id": 96, "type": "collect", "params": { "pulse": { "$ref": 95 } } },
+    {
+      "id": 97,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "text", "role": "axis-label" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 87 },
+        "parent": null,
+        "index": 1,
+        "pulse": { "$ref": 96 }
+      }
+    },
+    {
+      "id": 98,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 97 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"fill\"]=\"#000\";o[\"font\"]=\"sans-serif\";o[\"fontSize\"]=10;o[\"opacity\"]=0;o[\"x\"]=5*-1+(2*-1);o[\"y\"]=_[\"%y\"](datum[\"value\"])+0;o[\"align\"]=\"right\";o[\"baseline\"]=\"middle\";o[\"angle\"]=0;o[\"limit\"]=180;return 1;",
+              "$fields": ["value"],
+              "$output": [
+                "fill",
+                "font",
+                "fontSize",
+                "opacity",
+                "x",
+                "y",
+                "align",
+                "baseline",
+                "angle",
+                "limit"
+              ]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"text\"]=datum[\"label\"];o[\"x\"]=5*-1+(2*-1);o[\"y\"]=_[\"%y\"](datum[\"value\"])+0;return 1;",
+              "$fields": ["label", "value"],
+              "$output": ["opacity", "text", "x", "y"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"x\"]=5*-1+(2*-1);o[\"y\"]=_[\"%y\"](datum[\"value\"])+0;return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "x", "y"]
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 86 }
+      }
+    },
+    {
+      "id": 99,
+      "type": "bound",
+      "params": { "mark": { "$ref": 97 }, "pulse": { "$ref": 98 } }
+    },
+    {
+      "id": 100,
+      "type": "overlap",
+      "params": {
+        "method": true,
+        "pulse": { "$ref": 99 },
+        "sort": { "$compare": ["datum.index"], "$order": [] }
+      }
+    },
+    { "id": 101, "type": "render", "params": { "pulse": { "$ref": 100 } } },
+    {
+      "id": 102,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 101 } },
+      "parent": { "$ref": 85 }
+    },
+    {
+      "id": 103,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 78 }, "clean": true }
+    },
+    { "id": 104, "type": "collect", "params": { "pulse": { "$ref": 103 } } },
+    {
+      "id": 105,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "rule", "role": "axis-domain" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 87 },
+        "parent": null,
+        "index": 2,
+        "pulse": { "$ref": 104 }
+      }
+    },
+    {
+      "id": 106,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 105 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"stroke\"]=\"#888\";o[\"strokeWidth\"]=1;o[\"x\"]=0;o[\"y\"]=_[\"%y\"].range()[0];o[\"y2\"]=($=_[\"%y\"].range(),$[$.length-1]);return 1;",
+              "$fields": [],
+              "$output": ["opacity", "stroke", "strokeWidth", "x", "y", "y2"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"y\"]=_[\"%y\"].range()[0];o[\"y2\"]=($=_[\"%y\"].range(),$[$.length-1]);return 1;",
+              "$fields": [],
+              "$output": ["opacity", "y", "y2"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;return 1;",
+              "$fields": [],
+              "$output": ["opacity"]
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 86 }
+      }
+    },
+    {
+      "id": 107,
+      "type": "bound",
+      "params": { "mark": { "$ref": 105 }, "pulse": { "$ref": 106 } }
+    },
+    { "id": 108, "type": "render", "params": { "pulse": { "$ref": 107 } } },
+    {
+      "id": 109,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 108 } },
+      "parent": { "$ref": 85 }
+    },
+    {
+      "id": 110,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 78 }, "clean": true }
+    },
+    { "id": 111, "type": "collect", "params": { "pulse": { "$ref": 110 } } },
+    {
+      "id": 112,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "text", "role": "axis-title" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 87 },
+        "parent": null,
+        "index": 3,
+        "pulse": { "$ref": 111 }
+      }
+    },
+    {
+      "id": 113,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 112 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"fill\"]=\"#000\";o[\"font\"]=\"sans-serif\";o[\"fontSize\"]=11;o[\"fontWeight\"]=\"bold\";o[\"opacity\"]=0;o[\"anchor\"]=null;o[\"align\"]=((item.anchor===\"start\")?\"left\":((item.anchor===\"end\")?\"right\":\"center\"));o[\"angle\"]=-90;o[\"baseline\"]=\"bottom\";o[\"auto\"]=true;return 1;",
+              "$fields": [],
+              "$output": [
+                "fill",
+                "font",
+                "fontSize",
+                "fontWeight",
+                "opacity",
+                "anchor",
+                "align",
+                "angle",
+                "baseline",
+                "auto"
+              ]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"anchor\"]=null;o[\"align\"]=((item.anchor===\"start\")?\"left\":((item.anchor===\"end\")?\"right\":\"center\"));o[\"text\"]=\"Average of depdelay\";o[\"y\"]=this.lerp(this.range(\"y\"),((item.anchor===\"start\")?0:((item.anchor===\"end\")?1:0.5)));return 1;",
+              "$fields": [],
+              "$output": ["opacity", "anchor", "align", "text", "y"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;return 1;",
+              "$fields": [],
+              "$output": ["opacity"]
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 86 }
+      }
+    },
+    {
+      "id": 114,
+      "type": "bound",
+      "params": { "mark": { "$ref": 112 }, "pulse": { "$ref": 113 } }
+    },
+    { "id": 115, "type": "render", "params": { "pulse": { "$ref": 114 } } },
+    {
+      "id": 116,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 115 } },
+      "parent": { "$ref": 85 }
+    },
+    { "id": 117, "type": "render", "params": { "pulse": { "$ref": 85 } } },
+    {
+      "id": 118,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 117 } },
+      "parent": { "$ref": 15 }
+    },
+    {
+      "id": 119,
+      "type": "collect",
+      "value": [
+        {
+          "orient": "left",
+          "ticks": false,
+          "labels": false,
+          "grid": true,
+          "domain": false,
+          "title": false
+        }
+      ],
+      "params": {}
+    },
+    {
+      "id": 120,
+      "type": "axisticks",
+      "params": { "scale": { "$ref": 18 }, "count": { "$ref": 79 } }
+    },
+    {
+      "id": 121,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 119 }, "clean": false }
+    },
+    { "id": 122, "type": "collect", "params": { "pulse": { "$ref": 121 } } },
+    {
+      "id": 123,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "group", "role": "axis" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": null,
+        "parent": null,
+        "index": 2,
+        "pulse": { "$ref": 122 }
+      }
+    },
+    {
+      "id": 124,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 123 },
+        "encoders": {
+          "$encode": {
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"offset\"]=0;o[\"position\"]=0;o[\"titlePadding\"]=4;o[\"minExtent\"]=0;o[\"maxExtent\"]=0;o[\"range\"]=Math.abs(this.span(this.range(\"y\")));return 1;",
+              "$fields": [],
+              "$output": [
+                "offset",
+                "position",
+                "titlePadding",
+                "minExtent",
+                "maxExtent",
+                "range"
+              ]
+            },
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;return 1;",
+              "$fields": [],
+              "$output": []
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 16 }
+      }
+    },
+    {
+      "id": 125,
+      "type": "bound",
+      "params": { "mark": { "$ref": 123 }, "pulse": { "$ref": 124 } }
+    },
+    { "id": 126, "type": "sieve", "params": { "pulse": { "$ref": 124 } } },
+    { "id": 127, "type": "proxy", "params": { "value": { "$ref": 121 } } },
+    {
+      "id": 128,
+      "type": "datajoin",
+      "params": {
+        "key": { "$field": "value" },
+        "pulse": { "$ref": 120 },
+        "clean": true
+      }
+    },
+    { "id": 129, "type": "collect", "params": { "pulse": { "$ref": 128 } } },
+    {
+      "id": 130,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "rule", "role": "axis-grid" },
+        "interactive": false,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": { "$ref": 127 },
+        "parent": null,
+        "index": 0,
+        "pulse": { "$ref": 129 }
+      }
+    },
+    {
+      "id": 131,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 130 },
+        "encoders": {
+          "$encode": {
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"stroke\"]=\"#ddd\";o[\"strokeWidth\"]=1;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);o[\"x\"]=_[\"%x\"].range()[0]*1;o[\"x2\"]=($=_[\"%x\"].range(),$[$.length-1])*1;return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "stroke", "strokeWidth", "y", "x", "x2"]
+            },
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=1;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);o[\"x\"]=_[\"%x\"].range()[0]*1;o[\"x2\"]=($=_[\"%x\"].range(),$[$.length-1])*1;return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "y", "x", "x2"]
+            },
+            "exit": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"opacity\"]=0;o[\"y\"]=Math.round(_[\"%y\"](datum[\"value\"])+0);return 1;",
+              "$fields": ["value"],
+              "$output": ["opacity", "y"]
+            }
+          }
+        },
+        "%y": { "$ref": 18 },
+        "%x": { "$ref": 17 },
+        "parent": { "$ref": 126 }
+      }
+    },
+    {
+      "id": 132,
+      "type": "bound",
+      "params": { "mark": { "$ref": 130 }, "pulse": { "$ref": 131 } }
+    },
+    { "id": 133, "type": "render", "params": { "pulse": { "$ref": 132 } } },
+    {
+      "id": 134,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 133 } },
+      "parent": { "$ref": 125 }
+    },
+    { "id": 135, "type": "render", "params": { "pulse": { "$ref": 125 } } },
+    {
+      "id": 136,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 135 } },
+      "parent": { "$ref": 15 }
+    },
+    {
+      "id": 137,
+      "type": "datajoin",
+      "params": { "pulse": { "$ref": 27 }, "clean": true }
+    },
+    {
+      "id": 138,
+      "type": "collect",
+      "params": { "pulse": { "$ref": 137 } },
+      "data": { "marks": ["input"] }
+    },
+    {
+      "id": 139,
+      "type": "mark",
+      "params": {
+        "markdef": { "marktype": "line", "name": "marks", "role": "mark" },
+        "interactive": true,
+        "clip": false,
+        "context": { "$context": true },
+        "groups": null,
+        "parent": null,
+        "index": 3,
+        "pulse": { "$ref": 138 }
+      }
+    },
+    {
+      "id": 140,
+      "type": "encode",
+      "params": {
+        "pulse": { "$ref": 139 },
+        "encoders": {
+          "$encode": {
+            "update": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"stroke\"]=\"#4c78a8\";o[\"tooltip\"]={\"flight_dayofmonth\":(''+datum[\"flight_dayofmonth\"]),\"Average of depdelay\":this.format(datum[\"average_depdelay\"],\"\")};o[\"x\"]=_[\"%x\"](datum[\"flight_dayofmonth\"]);o[\"y\"]=_[\"%y\"](datum[\"average_depdelay\"]);o[\"defined\"]=((datum[\"average_depdelay\"]!==null)&&(!isNaN(datum[\"average_depdelay\"])));return 1;",
+              "$fields": ["flight_dayofmonth", "average_depdelay"],
+              "$output": ["stroke", "tooltip", "x", "y", "defined"]
+            },
+            "enter": {
+              "$expr": "var o=item,datum=o.datum,$;o[\"strokeWidth\"]=2;return 1;",
+              "$fields": [],
+              "$output": ["strokeWidth"]
+            }
+          }
+        },
+        "%x": { "$ref": 17 },
+        "%y": { "$ref": 18 },
+        "parent": { "$ref": 16 }
+      }
+    },
+    {
+      "id": 141,
+      "type": "sortitems",
+      "params": {
+        "sort": {
+          "$compare": ["datum[\"flight_dayofmonth\"]", { "$tupleid": 1 }],
+          "$order": ["descending"]
+        },
+        "pulse": { "$ref": 140 }
+      }
+    },
+    {
+      "id": 142,
+      "type": "bound",
+      "params": { "mark": { "$ref": 139 }, "pulse": { "$ref": 141 } }
+    },
+    {
+      "id": 143,
+      "type": "render",
+      "params": { "pulse": { "$ref": 142 } },
+      "data": { "marks": ["output"] }
+    },
+    {
+      "id": 144,
+      "type": "sieve",
+      "params": { "pulse": { "$ref": 143 } },
+      "parent": { "$ref": 15 },
+      "data": { "marks": ["values"] }
+    },
+    {
+      "id": 15,
       "type": "viewlayout",
       "params": {
         "legends": { "$ref": 5 },
         "autosize": { "$ref": 4 },
         "mark": { "$ref": 0 },
-        "pulse": { "$ref": 7 }
+        "pulse": { "$ref": 14 }
       }
     },
     {
-      "id": 10,
+      "id": 145,
       "type": "bound",
-      "params": { "mark": { "$ref": 0 }, "pulse": { "$ref": 8 } }
+      "params": { "mark": { "$ref": 0 }, "pulse": { "$ref": 15 } }
     },
-    { "id": 11, "type": "render", "params": { "pulse": { "$ref": 10 } } },
+    { "id": 146, "type": "render", "params": { "pulse": { "$ref": 145 } } },
     {
-      "id": 12,
+      "id": 147,
       "type": "sieve",
-      "params": { "pulse": { "$ref": 11 } },
+      "params": { "pulse": { "$ref": 146 } },
       "data": { "root": ["values"] }
     }
   ],
-  "streams": [],
-  "updates": [],
-  "bindings": [],
+  "streams": [
+    { "id": 33, "source": "view", "type": "mousemove" },
+    { "id": 34, "source": "view", "type": "click" },
+    { "stream": 34, "filter": "this.inScope(event.item)", "id": 35 },
+    { "id": 36, "source": "view", "type": "dblclick" },
+    { "stream": 36, "filter": "this.inScope(event.item)", "id": 37 }
+  ],
+  "updates": [
+    {
+      "source": 33,
+      "target": 7,
+      "update": {
+        "$expr": "var datum=event.item&&event.item.datum;return((this.isTuple(event.vega.group())?event.vega.group():_[\"$unit\"]));",
+        "$fields": [],
+        "$params": { "$unit": { "$ref": 7 } }
+      }
+    },
+    {
+      "source": 35,
+      "target": 8,
+      "update": {
+        "$expr": "var datum=event.item&&event.item.datum;return(((datum&&(event.vega.item().mark.marktype!=='group'))?datum[\"flight_month\"]:null));",
+        "$fields": ["flight_month"],
+        "$params": {}
+      }
+    },
+    {
+      "source": 37,
+      "target": 8,
+      "update": {
+        "$expr": "var datum=event.item&&event.item.datum;return(null);",
+        "$fields": [],
+        "$params": {}
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "signal": "month_flight_month",
+      "input": "range",
+      "max": 12,
+      "min": 1,
+      "step": 1
+    }
+  ],
   "eventConfig": { "defaults": { "allow": ["wheel"] } }
 }
