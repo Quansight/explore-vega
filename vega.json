@@ -3,80 +3,95 @@
     "$schema": "https://vega.github.io/schema/vega/v5.json",
     "autosize": "pad",
     "padding": 5,
-    "width": 200,
-    "height": 200,
+    "height": 300,
     "style": "cell",
     "data": [
+      { "name": "month_store" },
+      { "name": "initial-data" },
       {
-        "name": "source_0",
-        "url": "data/movies.json",
-        "format": { "type": "json" },
+        "name": "data_0",
+        "source": "initial-data",
         "transform": [
           {
-            "type": "extent",
-            "field": "IMDB_Rating",
-            "signal": "bin_maxbins_10_IMDB_Rating_extent"
-          },
-          {
-            "type": "bin",
-            "field": "IMDB_Rating",
-            "as": [
-              "bin_maxbins_10_IMDB_Rating",
-              "bin_maxbins_10_IMDB_Rating_end"
-            ],
-            "signal": "bin_maxbins_10_IMDB_Rating_bins",
-            "maxbins": 10,
-            "extent": { "signal": "bin_maxbins_10_IMDB_Rating_extent" }
+            "type": "filter",
+            "expr": "!(length(data(\"month_store\"))) || (vlSelectionTest(\"month_store\", datum))"
           },
           {
             "type": "aggregate",
-            "groupby": [
-              "bin_maxbins_10_IMDB_Rating",
-              "bin_maxbins_10_IMDB_Rating_end"
-            ],
-            "ops": ["count"],
-            "fields": [null],
-            "as": ["__count"]
-          },
-          {
-            "type": "filter",
-            "expr": "datum[\"bin_maxbins_10_IMDB_Rating\"] !== null && !isNaN(datum[\"bin_maxbins_10_IMDB_Rating\"])"
+            "groupby": ["flight_dayofmonth"],
+            "ops": ["average"],
+            "fields": ["depdelay"],
+            "as": ["average_depdelay"]
           }
         ]
+      }
+    ],
+    "signals": [
+      { "name": "x_step", "value": 20 },
+      {
+        "name": "width",
+        "update": "bandspace(domain('x').length, 1, 0.5) * x_step"
+      },
+      {
+        "name": "unit",
+        "value": {},
+        "on": [
+          {
+            "events": "mousemove",
+            "update": "isTuple(group()) ? group() : unit"
+          }
+        ]
+      },
+      {
+        "name": "month_flight_month",
+        "value": null,
+        "on": [
+          {
+            "events": [{ "source": "scope", "type": "click" }],
+            "update": "datum && item().mark.marktype !== 'group' ? datum[\"flight_month\"] : null"
+          },
+          {
+            "events": [{ "source": "scope", "type": "dblclick" }],
+            "update": "null"
+          }
+        ],
+        "bind": { "input": "range", "max": 12, "min": 1, "step": 1 }
+      },
+      { "name": "month", "update": "vlSelectionResolve(\"month_store\")" },
+      {
+        "name": "month_tuple",
+        "update": "month_flight_month !== null ? {fields: month_tuple_fields, values: [month_flight_month]} : null"
+      },
+      {
+        "name": "month_tuple_fields",
+        "value": [{ "type": "E", "field": "flight_month" }]
+      },
+      {
+        "name": "month_modify",
+        "update": "modify(\"month_store\", month_tuple, true)"
       }
     ],
     "marks": [
       {
         "name": "marks",
-        "type": "rect",
-        "style": ["bar"],
-        "from": { "data": "source_0" },
+        "type": "line",
+        "style": ["line"],
+        "sort": {
+          "field": "datum[\"flight_dayofmonth\"]",
+          "order": "descending"
+        },
+        "from": { "data": "data_0" },
         "encode": {
           "update": {
-            "fill": { "value": "#4c78a8" },
+            "stroke": { "value": "#4c78a8" },
             "tooltip": {
-              "signal": "{\"IMDB_Rating (binned)\": datum[\"bin_maxbins_10_IMDB_Rating\"] === null || isNaN(datum[\"bin_maxbins_10_IMDB_Rating\"]) ? \"null\" : format(datum[\"bin_maxbins_10_IMDB_Rating\"], \"\") + \" - \" + format(datum[\"bin_maxbins_10_IMDB_Rating_end\"], \"\"), \"Count of Records\": format(datum[\"__count\"], \"\")}"
+              "signal": "{\"flight_dayofmonth\": ''+datum[\"flight_dayofmonth\"], \"Average of depdelay\": format(datum[\"average_depdelay\"], \"\")}"
             },
-            "x2": [
-              {
-                "test": "datum[\"bin_maxbins_10_IMDB_Rating\"] === null || isNaN(datum[\"bin_maxbins_10_IMDB_Rating\"])",
-                "value": 0
-              },
-              {
-                "scale": "x",
-                "field": "bin_maxbins_10_IMDB_Rating",
-                "offset": 1
-              }
-            ],
-            "x": [
-              {
-                "test": "datum[\"bin_maxbins_10_IMDB_Rating\"] === null || isNaN(datum[\"bin_maxbins_10_IMDB_Rating\"])",
-                "value": 0
-              },
-              { "scale": "x", "field": "bin_maxbins_10_IMDB_Rating_end" }
-            ],
-            "y": { "scale": "y", "field": "__count" },
-            "y2": { "scale": "y", "value": 0 }
+            "x": { "scale": "x", "field": "flight_dayofmonth" },
+            "y": { "scale": "y", "field": "average_depdelay" },
+            "defined": {
+              "signal": "datum[\"average_depdelay\"] !== null && !isNaN(datum[\"average_depdelay\"])"
+            }
           }
         }
       }
@@ -84,18 +99,19 @@
     "scales": [
       {
         "name": "x",
-        "type": "linear",
+        "type": "point",
         "domain": {
-          "signal": "[bin_maxbins_10_IMDB_Rating_bins.start, bin_maxbins_10_IMDB_Rating_bins.stop]"
+          "data": "data_0",
+          "field": "flight_dayofmonth",
+          "sort": true
         },
-        "range": [0, { "signal": "width" }],
-        "bins": { "signal": "bin_maxbins_10_IMDB_Rating_bins" },
-        "zero": false
+        "range": { "step": { "signal": "x_step" } },
+        "padding": 0.5
       },
       {
         "name": "y",
         "type": "linear",
-        "domain": { "data": "source_0", "field": "__count" },
+        "domain": { "data": "data_0", "field": "average_depdelay" },
         "range": [{ "signal": "height" }, 0],
         "nice": true,
         "zero": true
@@ -106,17 +122,18 @@
         "scale": "x",
         "orient": "bottom",
         "grid": false,
-        "title": "IMDB_Rating (binned)",
-        "labelFlush": true,
+        "title": "flight_dayofmonth",
+        "labelAlign": "right",
+        "labelAngle": 270,
+        "labelBaseline": "middle",
         "labelOverlap": true,
-        "tickCount": { "signal": "ceil(width/10)" },
         "zindex": 1
       },
       {
         "scale": "y",
         "orient": "left",
         "grid": false,
-        "title": "Count of Records",
+        "title": "Average of depdelay",
         "labelOverlap": true,
         "tickCount": { "signal": "ceil(height/40)" },
         "zindex": 1
